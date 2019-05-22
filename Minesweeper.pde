@@ -1,27 +1,38 @@
-
-
 import de.bezier.guido.*;
 //Declare and initialize NUM_ROWS and NUM_COLS = 20
+public final static int NUM_ROWS = 15;
+public final static int NUM_COLS = 15;
 private MSButton[][] buttons; //2d array of minesweeper buttons
-private ArrayList <MSButton> bombs; //ArrayList of just the minesweeper buttons that are mined
+private ArrayList <MSButton> bombs = new ArrayList <MSButton>(); //ArrayList of just the minesweeper buttons that are mined
 
-void setup ()
-{
+void setup (){
     size(400, 400);
     textAlign(CENTER,CENTER);
     
     // make the manager
     Interactive.make( this );
     
-    //your code to initialize buttons goes here
-    
-    
-    
+    buttons = new MSButton[NUM_ROWS][NUM_COLS];
+    for (int i = 0; i < NUM_ROWS; i++){
+        for (int j = 0; j < NUM_COLS; j++){
+            buttons[i][j] = new MSButton(i,j);
+        }
+    }
+    for (int i = 0; i < 50; i++)
+    {
     setBombs();
+    }
 }
-public void setBombs()
-{
-    //your code
+public void setBombs(){
+    int row = (int)(Math.random()* NUM_ROWS);
+    int col = (int)(Math.random()* NUM_COLS);
+    for (int i = 0; i < NUM_ROWS; i++) {
+        for (int j = 0; j < NUM_COLS; j++){
+            if (!bombs.contains(buttons[row][col])){
+                bombs.add(buttons[row][col]);
+            }
+        }
+    }
 }
 
 public void draw ()
@@ -30,31 +41,49 @@ public void draw ()
     if(isWon())
         displayWinningMessage();
 }
-public boolean isWon()
-{
-    //your code here
-    return false;
+public boolean isWon(){
+    for (int i = 0; i < NUM_ROWS; i++) {
+        for (int j = 0; j < NUM_COLS; j++) {
+            if (!bombs.contains(buttons[i][j]) && buttons[i][j].isClicked() == false) 
+            {
+            return false;
+            }
+        }
+    } 
+    return true;
 }
-public void displayLosingMessage()
-{
-    //your code here
+public void displayLosingMessage(){
+    buttons[7][6].setLabel("O");
+    buttons[7][7].setLabel("O");
+    buttons[7][8].setLabel("P");
+    buttons[7][9].setLabel("S");
+    
+    for (int i = 0; i < NUM_ROWS; i++)  {
+        for (int j = 0; j < NUM_COLS; j++) {
+            if (bombs.contains(buttons[i][j]) && (buttons[i][j].isClicked() == false)){
+               buttons[i][j].mousePressed();
+            }
+        }
+    }
 }
-public void displayWinningMessage()
-{
-    //your code here
+public void displayWinningMessage(){
+    buttons[7][7].setLabel("W");
+    buttons[7][8].setLabel("I");
+    buttons[7][9].setLabel("N");
+    buttons[7][10].setLabel("N");
+    buttons[7][11].setLabel("E");
+    buttons[7][12].setLabel("R");
 }
 
-public class MSButton
-{
+public class MSButton{
     private int r, c;
     private float x,y, width, height;
     private boolean clicked, marked;
     private String label;
     
-    public MSButton ( int rr, int cc )
-    {
-        // width = 400/NUM_COLS;
-        // height = 400/NUM_ROWS;
+    public MSButton ( int rr, int cc ) {
+        width = 400/NUM_COLS;
+        height = 400/NUM_ROWS;
         r = rr;
         c = cc; 
         x = c*width;
@@ -63,28 +92,45 @@ public class MSButton
         marked = clicked = false;
         Interactive.add( this ); // register it with the manager
     }
-    public boolean isMarked()
-    {
+    public boolean isMarked(){
         return marked;
     }
-    public boolean isClicked()
-    {
+    public boolean isClicked(){
         return clicked;
     }
     // called by manager
     
-    public void mousePressed () 
-    {
+    public void mousePressed() {
         clicked = true;
-        //your code here
+        if (mouseButton == RIGHT){
+            marked = !marked;
+            if(marked == false){
+                clicked = false;
+            }
+        }
+        else if (bombs.contains(buttons[r][c])){
+            displayLosingMessage();
+        }
+        else if (countBombs(r,c) > 0){
+            setLabel(" "+countBombs(r,c));
+        }
+        else{
+            for (int i = r -1; i <= r+1 ; i++){
+                for (int j = c-1; j <= c+1; j++){
+                    if ((isValid(i,j) == true) && (buttons[i][j].isClicked() == false)){
+                        buttons[i][j].mousePressed();
+                    }
+                }
+            }
+        }
     }
 
-    public void draw () 
-    {    
+
+    public void draw () {    
         if (marked)
             fill(0);
-        // else if( clicked && bombs.contains(this) ) 
-        //     fill(255,0,0);
+        else if( clicked && bombs.contains(this) ) 
+            fill(255,0,0);
         else if(clicked)
             fill( 200 );
         else 
@@ -94,22 +140,26 @@ public class MSButton
         fill(0);
         text(label,x+width/2,y+height/2);
     }
-    public void setLabel(String newLabel)
-    {
+    public void setLabel(String newLabel) {
         label = newLabel;
     }
-    public boolean isValid(int r, int c)
-    {
-        //your code here
+    public boolean isValid(int r, int c) {
+        if ((r > -1) && (c > -1) && (r < NUM_ROWS) && (c < NUM_COLS)){
+            return true;
+        }
+        else{
         return false;
+        }
     }
-    public int countBombs(int row, int col)
-    {
+    public int countBombs(int row, int col){
         int numBombs = 0;
-        //your code here
+        for (int i = row -1; i <= row +1 ; i++){
+            for (int j = col -1; j <= col +1 ; j++){
+                if ((isValid(i,j) == true) && (bombs.contains(buttons[i][j]))){
+                    numBombs++;
+                }
+            }
+        }
         return numBombs;
     }
 }
-
-
-
